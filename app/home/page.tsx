@@ -106,7 +106,7 @@ export default function HomePage() {
       </div>
 
       {/* Hero */}
-      <div style={{ backgroundImage: "linear-gradient(rgba(10, 5, 30, 0.60), rgba(10, 5, 30, 0.60)), url('/images/hero-bg.webp')", backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat", borderRadius: "0 0 24px 24px", paddingBottom: "30px", paddingTop: "80px", textAlign: "center" }}>
+      <div style={{ backgroundImage: "linear-gradient(rgba(10, 5, 30, 0.60), rgba(10, 5, 30, 0.60)), url('https://risetoday.vercel.app/images/hero-bg.webp')", backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat", borderRadius: "0 0 24px 24px", paddingBottom: "30px", paddingTop: "80px", textAlign: "center" }}>
         <h1 style={{ color: "#FF9800", fontSize: "2em", textAlign: "center", marginTop: "30px", marginBottom: "10px", fontWeight: 800 }}>JIREENYA SIMACHUUFI 🫂</h1>
         <p style={{ textAlign: "center", color: "#ddd", marginBottom: "30px" }}>Baga nagaan Dhufte!🙏</p>
 
