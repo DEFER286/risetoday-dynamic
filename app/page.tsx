@@ -2,106 +2,111 @@
 
 import { useState, useEffect } from "react";
 
-export default function Home() {
+interface Comment {
+  _id: string;
+  name: string;
+  text: string;
+  createdAt: string;
+}
+
+export default function HomePage() {
+  const [comments, setComments] = useState<Comment[]>([]);
   const [name, setName] = useState("");
   const [text, setText] = useState("");
-  const [messages, setMessages] = useState([]);
+  const [likes, setLikes] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // Ergaawwan database keessa jiran gadi fiduuf
-  const fetchMessages = async () => {
+  useEffect(() => {
+    fetchComments();
+    const savedLikes = localStorage.getItem("rise_today_likes");
+    if (savedLikes) setLikes(parseInt(savedLikes));
+  }, []);
+
+  const fetchComments = async () => {
     try {
       const res = await fetch("/api/messages");
       const data = await res.json();
-      if (data.success) {
-        setMessages(data.data);
-      }
+      if (data.success) setComments(data.data);
     } catch (err) {
-      console.error("Error fetching messages:", err);
+      console.error(err);
     }
   };
 
-  useEffect(() => {
-    fetchMessages();
-  }, []);
-
-  // Ergaa haaraa gara database-tti erguuf
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !text) return alert("Maaloo hunda guuti!");
-
+    if (!name || !text) return;
     setLoading(true);
+
     try {
       const res = await fetch("/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, text }),
       });
-
       const data = await res.json();
-      setLoading(false);
-
       if (data.success) {
         setName("");
         setText("");
-        fetchMessages(); // Battalatti galmee haaraa gadiitti fida
-      } else {
-        alert("Dogoggora: " + data.error);
+        fetchComments();
       }
     } catch (err) {
+      console.error(err);
+    } finally {
       setLoading(false);
-      alert("Gara database erguun hin danda'amne!");
     }
   };
 
+  const handleLike = () => {
+    const newLikes = likes + 1;
+    setLikes(newLikes);
+    localStorage.setItem("rise_today_likes", newLikes.toString());
+  };
+
   return (
-    <div style={{ padding: "20px", maxWidth: "500px", margin: "0 auto", fontFamily: "sans-serif", color: "#fff", backgroundColor: "#000", minHeight: "100vh" }}>
-      <h2 style={{ textAlign: "center", marginTop: "20px" }}>RISE TODAY</h2>
-      <p style={{ fontWeight: "bold", color: "#aaa", textAlign: "center", marginBottom: "30px" }}>MULDHATA KEE DHUGOOMSI</p>
-      
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-        <div>
-          <label style={{ display: "block", marginBottom: "5px", color: "#ccc" }}>Maqaa Kee:</label>
-          <input
-            type="text"
-            placeholder="Maqaa kee asitti barreessi..."
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #444", color: "#000", background: "#fff", fontSize: "16px", boxSizing: "border-box" }}
-          />
+    <div style={{ backgroundColor: "#0a0a0a", color: "white", fontFamily: "Arial, sans-serif", minHeight: "100vh" }}>
+      <nav style={{ position: "fixed", top: 0, left: 0, width: "100%", background: "rgba(0, 0, 0, 0.92)", display: "flex", alignItems: "center", padding: "15px 24px", boxSizing: "border-box", zIndex: 1000, borderBottom: "1px solid rgba(255, 152, 0, 0.1)" }}>
+        <div style={{ fontWeight: "bold", fontSize: "18px", color: "#FF9800", letterSpacing: "1px" }}>
+          ⚡ RISE TODAY
         </div>
+      </nav>
 
-        <div>
-          <label style={{ display: "block", marginBottom: "5px", color: "#ccc" }}>Ergaa Kee:</label>
-          <textarea
-            placeholder="Ergaa kee asitti dhiisi..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #444", height: "120px", color: "#000", background: "#fff", fontSize: "16px", boxSizing: "border-box" }}
-          />
-        </div>
-
-        <button type="submit" disabled={loading} style={{ padding: "12px", background: "#0070f3", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "16px", fontWeight: "bold", marginTop: "10px" }}>
-          {loading ? "Ergamaa jira..." : "Ergi"}
+      <section style={{ height: "60vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", padding: "20px", marginTop: "60px" }}>
+        <h1 style={{ fontSize: "36px", marginBottom: "14px", color: "#FF9800", fontWeight: "bold" }}>
+          RISE TODAY - Gorsa Jireenyaa
+        </h1>
+        <p style={{ color: "#aaa", fontSize: "15px", marginBottom: "32px", maxWidth: "380px", lineHeight: 1.6 }}>
+          Tarkaanfii tokko fudhu... Milkaa'inni si eega jira 🔥
+        </p>
+        <button onClick={handleLike} style={{ background: "linear-gradient(135deg, #FF9800, #ffb74d)", color: "#000", border: "none", padding: "12px 28px", borderRadius: "40px", cursor: "pointer", fontWeight: "bold", fontSize: "16px" }}>
+          ❤️ Reaction ({likes})
         </button>
-      </form>
+      </section>
 
-      <hr style={{ margin: "40px 0", borderColor: "#333" }} />
+      <section style={{ maxWidth: "500px", margin: "0 auto", padding: "20px", borderTop: "1px solid rgba(255,152,0,0.2)" }}>
+        <h3 style={{ color: "#FF9800", marginBottom: "15px", textAlign: "center" }}>Yaada Keessan Kennaa</h3>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "30px" }}>
+          <input type="text" placeholder="Maqaa kee..." value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #333", backgroundColor: "#111", color: "white" }} required />
+          <textarea placeholder="Yaada kee asitti dhiisi..." value={text} onChange={(e) => setText(e.target.value)} style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #333", backgroundColor: "#111", color: "white", minHeight: "80px" }} required />
+          <button type="submit" disabled={loading} style={{ background: "#FF9800", color: "black", padding: "12px", borderRadius: "8px", fontWeight: "bold", border: "none", cursor: "pointer" }}>
+            {loading ? "Ergamaa..." : "Yaada Ergi"}
+          </button>
+        </form>
 
-      <h3 style={{ marginBottom: "15px" }}>Ergaawwan Sif Kha'an:</h3>
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        {messages.length === 0 ? (
-          <p style={{ color: "#aaa", fontStyle: "italic" }}>Hanga ammaati ergaan kuufame hin jiru.</p>
-        ) : (
-          messages.map((msg: any) => (
-            <div key={msg._id} style={{ padding: "15px", background: "#111", borderRadius: "8px", border: "1px solid #222" }}>
-              <strong style={{ color: "#0070f3", display: "block", marginBottom: "5px" }}>{msg.name}</strong>
-              <p style={{ margin: 0, color: "#ddd", lineHeight: "1.5" }}>{msg.text}</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {comments.map((c) => (
+            <div key={c._id} style={{ backgroundColor: "#111", padding: "12px", borderRadius: "8px", borderLeft: "4px solid #FF9800" }}>
+              <b style={{ color: "#FF9800", fontSize: "14px" }}>{c.name}</b>
+              <p style={{ margin: "4px 0 0 0", fontSize: "14px", color: "#ddd" }}>{c.text}</p>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      </section>
+
+      <footer style={{ background: "#0d0d0d", textAlign: "center", padding: "30px 20px", marginTop: "40px", borderTop: "1px solid rgba(255,152,0,0.12)" }}>
+        <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", margin: 0 }}>
+          &copy; 2026 <span style={{ color: "#FF9800", fontWeight: "bold" }}>RISE TODAY</span>. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 }
-
