@@ -1,4 +1,4 @@
-import Link from "next/next-link" or "next/link";
+import Link from "next/link";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -53,7 +53,6 @@ export default function IndexPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       
-      {/* Design kee akka jetti eeguuf CSS akkuma jirutti as keessa jira */}
       <style dangerouslySetInnerHTML={{ __html: `
         body {
           margin: 0;
@@ -176,7 +175,6 @@ export default function IndexPage() {
         <Link href="/motivation">Motivation</Link>
         <Link href="/stories">Seenaa</Link>
         <Link href="/education">Gorsa</Link>
-        <Link href="/about">About Us</Link>
 
         <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(255,153,0,0.1)" }}>
           <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", margin: 0, letterSpacing: "1px" }}>
