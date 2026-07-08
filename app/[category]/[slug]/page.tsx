@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, increment } from "firebase/firestore";
 
 interface PostItem {
   title: string;
@@ -21,12 +23,11 @@ export default function PostDetailPage() {
   const [post, setPost] = useState<PostItem | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   
-  // States for Reactions and Interaction
   const [likes, setLikes] = useState<number>(0);
+  const [comments, setComments] = useState<string[]>([]);
   const [isLiked, setIsLiked] = useState<boolean>(false);
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [commentText, setCommentText] = useState<string>("");
-  const [comments, setComments] = useState<string[]>([]);
 
   useEffect(() => {
     if (!category || !slug) return;
@@ -42,15 +43,28 @@ export default function PostDetailPage() {
       })
       .catch(() => setLoading(false));
 
-    // Fakkeenyaaf tilmaamaan likes uumu (Sana booda Supabase irraa fidhna)
-    setLikes(Math.floor(Math.random() * 50) + 5);
+    const docRef = doc(db, "interactions", slug);
+    getDoc(docRef).then((docSnap) => {
+      if (docSnap.exists()) {
+        const dbData = docSnap.data();
+        setLikes(dbData.likes || 0);
+        setComments(dbData.comments || []);
+      } else {
+        setDoc(docRef, { likes: 0, comments: [] });
+      }
+    });
   }, [category, slug]);
 
-  const handleLike = () => {
+  const handleLike = async () => {
+    if (!slug) return;
+    const docRef = doc(db, "interactions", slug);
+
     if (isLiked) {
-      setLikes(likes - 1);
+      setLikes((prev) => prev - 1);
+      await updateDoc(docRef, { likes: increment(-1) });
     } else {
-      setLikes(likes + 1);
+      setLikes((prev) => prev + 1);
+      await updateDoc(docRef, { likes: increment(1) });
     }
     setIsLiked(!isLiked);
   };
@@ -72,11 +86,18 @@ export default function PostDetailPage() {
     }
   };
 
-  const handleAddComment = (e: React.FormEvent) => {
+  const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
-    setComments([...comments, commentText]);
+    if (!commentText.trim() || !slug) return;
+
+    const newComment = commentText.trim();
+    setComments((prev) => [...prev, newComment]);
     setCommentText("");
+
+    const docRef = doc(db, "interactions", slug);
+    await updateDoc(docRef, {
+      comments: arrayUnion(newComment)
+    });
   };
 
   if (loading) {
@@ -101,7 +122,6 @@ export default function PostDetailPage() {
   return (
     <div style={{ background: "linear-gradient(135deg, #110A1C, #1A0D2E, #0A1C2A)", backgroundAttachment: "fixed", minHeight: "100vh", color: "white", padding: "15px", fontFamily: "sans-serif" }}>
       
-      {/* Top Bar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", background: "rgba(0,0,0,0.3)", padding: "10px 15px", borderRadius: "10px" }}>
         <button onClick={() => router.push("/home")} style={{ background: "none", border: "none", color: "#FF9800", fontSize: "16px", cursor: "pointer", fontWeight: "bold" }}>
           ⬅ Deebi'i
@@ -111,7 +131,6 @@ export default function PostDetailPage() {
         </span>
       </div>
 
-      {/* Main Post Container */}
       <div style={{ maxWidth: "650px", margin: "0 auto", background: "#1F1A3A", borderRadius: "16px", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.4)" }}>
         
         {post.image ? (
@@ -133,23 +152,19 @@ export default function PostDetailPage() {
 
           <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.1)", marginBottom: "15px" }} />
 
-          {/* WHAT DO YOU THINK? / INTERACTION ICONS */}
           <p style={{ fontSize: "14px", fontWeight: "bold", color: "#FF9800", marginBottom: "12px", textAlign: "center" }}>What do you think? 🤔</p>
           
           <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", padding: "10px 0" }}>
-            {/* Like */}
             <div onClick={handleLike} style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", color: isLiked ? "#FF9800" : "#bbb" }}>
               <span style={{ fontSize: "22px" }}>{isLiked ? "❤️" : "🤍"}</span>
               <span style={{ fontSize: "11px", marginTop: "4px" }}>{likes} Likes</span>
             </div>
 
-            {/* Save */}
             <div onClick={handleSave} style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", color: isSaved ? "#FF9800" : "#bbb" }}>
               <span style={{ fontSize: "22px" }}>{isSaved ? "🔖" : "📑"}</span>
               <span style={{ fontSize: "11px", marginTop: "4px" }}>{isSaved ? "Saved" : "Save"}</span>
             </div>
 
-            {/* Share */}
             <div onClick={handleShare} style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", color: "#bbb" }}>
               <span style={{ fontSize: "22px" }}>🔗</span>
               <span style={{ fontSize: "11px", marginTop: "4px" }}>Share</span>
@@ -159,7 +174,6 @@ export default function PostDetailPage() {
         </div>
       </div>
 
-      {/* COMMENTS SECTION */}
       <div style={{ maxWidth: "650px", margin: "20px auto 0", background: "#1F1A3A", borderRadius: "16px", padding: "20px" }}>
         <h3 style={{ fontSize: "16px", color: "#FF9800", marginBottom: "15px" }}>Yaada Keessan Lakkisaa (Comments) 💬</h3>
         
@@ -174,7 +188,6 @@ export default function PostDetailPage() {
           <button type="submit" style={{ background: "#FF9800", color: "white", border: "none", borderRadius: "20px", padding: "0 18px", fontWeight: "bold", cursor: "pointer" }}>Ergi</button>
         </form>
 
-        {/* List of Comments */}
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {comments.length === 0 ? (
             <p style={{ color: "#888", fontSize: "13px", textAlign: "center" }}>Yaanni dabalamaa hin jiru. Jalqabaa ta'i!</p>
@@ -187,6 +200,10 @@ export default function PostDetailPage() {
             ))
           )}
         </div>
+      </div>
+
+      <div style={{ textAlign: "center", marginTop: "30px", color: "rgba(255,255,255,0.4)", fontSize: "12px", display: "flex", justifyContent: "center" }}>
+        <b>RISE TODAY — MULDHATA KEE DHUGOOMSI</b>
       </div>
 
     </div>
