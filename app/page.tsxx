@@ -1,0 +1,34 @@
+import Image from "next/image";
+
+export default function Home() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-6 font-sans">
+      <main className="flex flex-col items-center text-center max-w-2xl">
+        
+        {/* Logo / Branding Area */}
+        <div className="mb-8">
+          <h1 className="text-5xl font-black tracking-wider text-red-600 mb-2 drop-shadow-md">
+            RISE TODAY
+          </h1>
+          <p className="text-xl font-bold tracking-widest text-zinc-300 uppercase">
+            MULDHATA KEE DHUGOOMSI
+          </p>
+        </div>
+
+        {/* Welcome Message */}
+        <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-xl max-w-md mb-8">
+          <p className="text-zinc-400 leading-relaxed text-base">
+            Weebsaaytii dynamic Next.js fi MongoDB piroojektii keenya jalqabaa simannaa siif haa godhu! Hojii keenya itti fufna.
+          </p>
+        </div>
+
+        {/* Footer info */}
+        <div className="text-zinc-600 text-xs tracking-wide">
+          © {new Date().getFullYear()} Rise Today. Crafted via Termux.
+        </div>
+
+      </main>
+    </div>
+  );
+}
+
